@@ -25,10 +25,29 @@ yarn install simple-aes-cbc
 
 Here's an example of how to use this module:
 
+### deno
+
 ```typescript
 import { SimpleAesCbc } from "https://deno.land/x/simple_aes_cbc/mod.ts";
 
-const stringCrypto = new SimpleAesCbc("1234567890123456");
+const stringCrypto = new SimpleAesCbc("1234567890123456", crypto.subtle);
+
+const data = "hello my friend";
+
+const encrypted = await stringCrypto.encryptString(data);
+
+const decrypted = await stringCrypto.decryptString(encrypted);
+
+console.log(decrypted); // "hello my friend"
+```
+
+### node
+
+```typescript
+import { webcrypto } from "node:crypto";
+import { SimpleAesCbc } from "simple-aes-cbc";
+
+const stringCrypto = new SimpleAesCbc("1234567890123456", webcrypto.subtle);
 
 const data = "hello my friend";
 
@@ -41,9 +60,9 @@ console.log(decrypted); // "hello my friend"
 
 ## API
 
-### `new SimpleAesCbc(privateKey: string)`
+### `new SimpleAesCbc(privateKey: string, subtleCrypto: SubtleCrypto)`
 
-This is the constructor of the `SimpleAesCbc` class. It takes a `privateKey` as a parameter, which is used to encrypt and decrypt the data.
+This is the constructor of the `SimpleAesCbc` class. It takes a `privateKey` and a [`subtleCrypto`](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) as a parameter, which is used to encrypt and decrypt the data.
 
 #### `encrypt(data: BufferSource): Promise<ArrayBuffer>`
 

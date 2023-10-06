@@ -1,14 +1,16 @@
 const ALGORITHM = "AES-CBC";
 
 export class SimpleAesCbc {
-  private iv: Uint8Array;
   private privateKey: string;
+  private subtle: SubtleCrypto;
+  private iv: Uint8Array;
   private cryptoKey: CryptoKey | undefined;
 
-  constructor(privateKey: string) {
-    this.iv = new TextEncoder().encode(privateKey.slice(0, 16));
-
+  constructor(privateKey: string, subtle: SubtleCrypto) {
     this.privateKey = privateKey;
+    this.subtle = subtle;
+
+    this.iv = new TextEncoder().encode(privateKey.slice(0, 16));
   }
 
   private async getCryptoKey() {
@@ -16,7 +18,7 @@ export class SimpleAesCbc {
       return this.cryptoKey;
     }
 
-    this.cryptoKey = await crypto.subtle.importKey(
+    this.cryptoKey = await this.subtle.importKey(
       "raw",
       new TextEncoder().encode(this.privateKey),
       {
@@ -31,7 +33,7 @@ export class SimpleAesCbc {
 
   async encrypt(data: BufferSource) {
     const key = await this.getCryptoKey();
-    return await crypto.subtle.encrypt(
+    return await this.subtle.encrypt(
       {
         name: ALGORITHM,
         iv: this.iv,
@@ -43,7 +45,7 @@ export class SimpleAesCbc {
 
   async decrypt(data: BufferSource) {
     const key = await this.getCryptoKey();
-    return await crypto.subtle.decrypt(
+    return await this.subtle.decrypt(
       {
         name: ALGORITHM,
         iv: this.iv,

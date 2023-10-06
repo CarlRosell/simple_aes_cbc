@@ -2,7 +2,7 @@ import { assertEquals } from "https://deno.land/std@0.203.0/assert/assert_equals
 import { SimpleAesCbc } from "./mod.ts";
 
 Deno.test("encrypt and decrypt", async () => {
-  const stringCrypto = new SimpleAesCbc("1234567890123456");
+  const stringCrypto = new SimpleAesCbc("1234567890123456", crypto.subtle);
 
   const data = "hello my friend";
 
