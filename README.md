@@ -49,13 +49,7 @@ import { SimpleAesCbc } from "simple-aes-cbc";
 
 const stringCrypto = new SimpleAesCbc("1234567890123456", webcrypto.subtle);
 
-const data = "hello my friend";
-
-const encrypted = await stringCrypto.encryptString(data);
-
-const decrypted = await stringCrypto.decryptString(encrypted);
-
-console.log(decrypted); // "hello my friend"
+// ... same as above
 ```
 
 ## API
