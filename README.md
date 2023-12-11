@@ -1,9 +1,8 @@
 # simple_aes_cbc
 
 This is a TypeScript module that provides a simple class for encryption and
-decryption functionality. It uses the `AES-CBC`-algorithm and depends on the
-global `crypto`, `atob` and `btoa` functions to perform the encryption and
-decryption, so it can be used in `deno >= 1.15` and `node >= 16.0.0` .
+decryption functionality. It uses the `AES-CBC`-algorithm and it uses `atob` and
+`btoa` functions to perform base64 encoding/decoding.
 
 ## Installation
 
@@ -56,12 +55,14 @@ const stringCrypto = new SimpleAesCbc("1234567890123456", webcrypto.subtle);
 
 ## API
 
-### `new SimpleAesCbc(privateKey: string, subtleCrypto: SubtleCrypto)`
+### `new SimpleAesCbc(private_key: Uint8Array | string, subtle: SubtleCrypto, iv?: Uint8Array | string)`
 
-This is the constructor of the `SimpleAesCbc` class. It takes a `privateKey` and
-a
-[`subtleCrypto`](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto)
-as a parameter, which is used to encrypt and decrypt the data.
+This is the constructor of the `SimpleAesCbc` class. It takes three arguments:
+
+- `private_key`, 16 bytes
+- [`subtle`](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto).
+  Which is used to encrypt and decrypt the data
+- optional `iv`, also 16 bytes.
 
 #### `encrypt(data: BufferSource): Promise<ArrayBuffer>`
 
@@ -73,25 +74,30 @@ This method decrypts the given data.
 
 #### `encryptString(data: string): Promise<string>`
 
-Encrypts the given string using the private key.
-The encrypted string returned from this function might not be human readable or used safely in a URL.
-If you want a human readable string that is safe to use, use [`encryptStringSafe`](#encryptstringsafe) instead.
+Encrypts the given string using the private key. The encrypted string returned
+from this function might not be human readable or used safely in a URL. If you
+want a human readable string that is safe to use, use
+[`encryptStringSafe`](#encryptstringsafe) instead.
 
 #### `decryptString(data: string): Promise<string>`
 
-Decrypts the given string using the private key.
-This function expects the string to be in the same format as the one returned from [`encryptString`](#encryptstring).
-If you want to decrypt a string that was encrypted using [`encryptStringSafe`](#encryptstringsafe), use [`decryptStringSafe`](#decryptstringsafe) instead.
+Decrypts the given string using the private key. This function expects the
+string to be in the same format as the one returned from
+[`encryptString`](#encryptstring). If you want to decrypt a string that was
+encrypted using [`encryptStringSafe`](#encryptstringsafe), use
+[`decryptStringSafe`](#decryptstringsafe) instead.
 
 #### `encryptStringToBase64(data: string): Promise<string>`
 
-Encrypts the given string to a base64 encoded string using the private key.
-The encrypted string returned from this function is human readable and safe to use in a URL.
+Encrypts the given string to a base64 encoded string using the private key. The
+encrypted string returned from this function is human readable and safe to use
+in a URL.
 
 #### `decryptStringFromBase64(data: string): Promise<string>`
 
-Decrypts the given base64 encoded string using the private key.
-This function expects the string to be in the same format as the one returned from [`encryptStringToBase64`](#encryptstringtobase64).
+Decrypts the given base64 encoded string using the private key. This function
+expects the string to be in the same format as the one returned from
+[`encryptStringToBase64`](#encryptstringtobase64).
 
 ## License
 

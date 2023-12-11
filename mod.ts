@@ -1,32 +1,71 @@
 const ALGORITHM = "AES-CBC";
 
+type Subtle = {
+  importKey: SubtleCrypto["importKey"];
+  encrypt: SubtleCrypto["encrypt"];
+  decrypt: SubtleCrypto["decrypt"];
+};
+
+function get_uint8_array(input: Uint8Array | string) {
+  if (input instanceof Uint8Array) {
+    return input;
+  } else if (typeof input === "string") {
+    return new TextEncoder().encode(input);
+  } else {
+    throw new Error("Invalid input key type, must be string or Uint8Array.");
+  }
+}
+
 /**
  * A simple wrapper for WebCrypto which uses the AES-CBC algorithm.
- * @class
- * @property {string} privateKey The private key used for encryption and decryption.
- * @property {SubtleCrypto} subtle The WebCrypto API.
+ * @class SimpleAesCbc
  */
 export class SimpleAesCbc {
-  private privateKey: Uint8Array;
-  private subtle: SubtleCrypto;
+  private private_key: Uint8Array;
+  private subtle: Subtle;
   private iv: Uint8Array;
-  private cryptoKey: CryptoKey | undefined;
+  private crypto_key: CryptoKey | undefined;
 
-  constructor(privateKey: string, subtle: SubtleCrypto) {
-    this.privateKey = new TextEncoder().encode(privateKey);
+  /**
+   * Creates an instance of SimpleAesCbc.
+   * @param {Uint8Array | string} private_key The private key to use for encryption and decryption.
+   * @param {Subtle} subtle The WebCrypto Subtle object to use for encryption and decryption.
+   * @param {Uint8Array | string} [iv] The initialization vector to use for encryption and decryption.
+   * If not provided, the private key will be used as the initialization vector.
+   * @throws {Error} If the key length is not 16 bytes.
+   */
+  constructor(
+    private_key: Uint8Array | string,
+    subtle: Subtle,
+    iv?: Uint8Array | string
+  ) {
     this.subtle = subtle;
 
-    this.iv = this.privateKey.slice(0, 16);
-  }
+    this.private_key = get_uint8_array(private_key);
 
-  private async getCryptoKey() {
-    if (this.cryptoKey) {
-      return this.cryptoKey;
+    if (iv) {
+      this.iv = get_uint8_array(iv);
+    } else {
+      this.iv = this.private_key;
     }
 
-    this.cryptoKey = await this.subtle.importKey(
+    if (this.iv.length !== 16 || this.private_key.length !== 16) {
+      throw new Error("Invalid key length, must be 16 bytes.");
+    }
+  }
+
+  /**
+   * Gets the CryptoKey object to use for encryption and decryption.
+   * @returns {Promise<CryptoKey>} The CryptoKey object to use for encryption and decryption.
+   */
+  private async get_crypto_key(): Promise<CryptoKey> {
+    if (this.crypto_key) {
+      return this.crypto_key;
+    }
+
+    this.crypto_key = await this.subtle.importKey(
       "raw",
-      this.privateKey,
+      this.private_key,
       {
         name: ALGORITHM,
       },
@@ -34,7 +73,7 @@ export class SimpleAesCbc {
       ["encrypt", "decrypt"]
     );
 
-    return this.cryptoKey;
+    return this.crypto_key;
   }
 
   /**
@@ -44,7 +83,7 @@ export class SimpleAesCbc {
    * @throws {Error} If the data could not be encrypted.
    */
   async encrypt(data: BufferSource): Promise<ArrayBuffer> {
-    const key = await this.getCryptoKey();
+    const key = await this.get_crypto_key();
     return await this.subtle.encrypt(
       {
         name: ALGORITHM,
@@ -62,7 +101,7 @@ export class SimpleAesCbc {
    * @throws {Error} If the data could not be decrypted.
    */
   async decrypt(data: BufferSource): Promise<ArrayBuffer> {
-    const key = await this.getCryptoKey();
+    const key = await this.get_crypto_key();
     return await this.subtle.decrypt(
       {
         name: ALGORITHM,

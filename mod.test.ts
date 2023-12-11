@@ -1,8 +1,13 @@
-import { assertEquals } from "https://deno.land/std@0.203.0/assert/assert_equals.ts";
+import {
+  assertEquals,
+  assertRejects,
+} from "https://deno.land/std@0.203.0/assert/mod.ts";
 import { SimpleAesCbc } from "./mod.ts";
 
-Deno.test("encrypt and decrypt", async () => {
-  const stringCrypto = new SimpleAesCbc("1234567890123456", crypto.subtle);
+const PRIVATE_KEY = "1234567890123456";
+
+Deno.test("encrypt and decrypt with string as the private key", async () => {
+  const stringCrypto = new SimpleAesCbc(PRIVATE_KEY, crypto.subtle);
 
   const data = "hello my friend";
 
@@ -11,4 +16,92 @@ Deno.test("encrypt and decrypt", async () => {
   const decrypted = await stringCrypto.decryptString(encrypted);
 
   assertEquals(decrypted, data);
+});
+
+Deno.test(
+  "encrypt and decrypt with Uint8Array as the private key",
+  async () => {
+    const privateKey = new Uint8Array(16);
+    crypto.getRandomValues(privateKey);
+
+    const stringCrypto = new SimpleAesCbc(privateKey, crypto.subtle);
+
+    const data = "hello my friend";
+
+    const encrypted = await stringCrypto.encryptString(data);
+
+    const decrypted = await stringCrypto.decryptString(encrypted);
+
+    assertEquals(decrypted, data);
+  },
+);
+
+Deno.test(
+  "encrypt and decrypt with string as the private key and iv",
+  async () => {
+    const stringCrypto = new SimpleAesCbc(
+      PRIVATE_KEY,
+      crypto.subtle,
+      PRIVATE_KEY.split("").reverse().join(""),
+    );
+
+    const data = "hello my friend";
+
+    const encrypted = await stringCrypto.encryptString(data);
+
+    const decrypted = await stringCrypto.decryptString(encrypted);
+
+    assertEquals(decrypted, data);
+  },
+);
+
+Deno.test(
+  "encrypt and decrypt with Uint8Array as the private key and iv",
+  async () => {
+    const privateKey = new Uint8Array(16);
+    crypto.getRandomValues(privateKey);
+
+    const stringCrypto = new SimpleAesCbc(
+      privateKey,
+      crypto.subtle,
+      privateKey.toReversed(),
+    );
+
+    const data = "hello my friend";
+
+    const encrypted = await stringCrypto.encryptString(data);
+
+    const decrypted = await stringCrypto.decryptString(encrypted);
+
+    assertEquals(decrypted, data);
+  },
+);
+
+Deno.test("should handle decryption between different classes", async () => {
+  const stringCrypto1 = new SimpleAesCbc(PRIVATE_KEY, crypto.subtle);
+
+  const stringCrypto2 = new SimpleAesCbc(PRIVATE_KEY, crypto.subtle);
+
+  const data = "hello my friend";
+
+  const encrypted = await stringCrypto1.encryptString(data);
+
+  const decrypted = await stringCrypto2.decryptString(encrypted);
+
+  assertEquals(decrypted, data);
+});
+
+Deno.test("should not decrypt with different private keys or ivs", async () => {
+  const stringCrypto1 = new SimpleAesCbc(PRIVATE_KEY, crypto.subtle);
+
+  const stringCrypto2 = new SimpleAesCbc(
+    PRIVATE_KEY.split("").reverse().join(""),
+    crypto.subtle,
+  );
+
+  const data = "hello my friend";
+
+  const encrypted = await stringCrypto1.encryptString(data);
+
+  assertRejects(() => stringCrypto2.decryptString(encrypted));
 });
