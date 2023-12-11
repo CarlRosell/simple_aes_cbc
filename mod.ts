@@ -50,7 +50,9 @@ export class SimpleAesCbc {
     }
 
     if (this.iv.length !== 16 || this.private_key.length !== 16) {
-      throw new Error("Invalid key length, must be 16 bytes.");
+      throw new Error(
+        "Invalid length for either private_key or iv, must be 16 bytes."
+      );
     }
   }
 
