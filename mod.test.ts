@@ -1,6 +1,7 @@
 import {
   assertEquals,
   assertRejects,
+  assertThrows,
 } from "https://deno.land/std@0.203.0/assert/mod.ts";
 import { SimpleAesCbc } from "./mod.ts";
 
@@ -33,7 +34,7 @@ Deno.test(
     const decrypted = await stringCrypto.decryptString(encrypted);
 
     assertEquals(decrypted, data);
-  },
+  }
 );
 
 Deno.test(
@@ -42,7 +43,7 @@ Deno.test(
     const stringCrypto = new SimpleAesCbc(
       PRIVATE_KEY,
       crypto.subtle,
-      PRIVATE_KEY.split("").reverse().join(""),
+      PRIVATE_KEY.split("").reverse().join("").slice(0, 16)
     );
 
     const data = "hello my friend";
@@ -52,7 +53,7 @@ Deno.test(
     const decrypted = await stringCrypto.decryptString(encrypted);
 
     assertEquals(decrypted, data);
-  },
+  }
 );
 
 Deno.test(
@@ -64,7 +65,7 @@ Deno.test(
     const stringCrypto = new SimpleAesCbc(
       privateKey,
       crypto.subtle,
-      privateKey.toReversed(),
+      privateKey.toReversed()
     );
 
     const data = "hello my friend";
@@ -74,7 +75,7 @@ Deno.test(
     const decrypted = await stringCrypto.decryptString(encrypted);
 
     assertEquals(decrypted, data);
-  },
+  }
 );
 
 Deno.test("should handle decryption between different classes", async () => {
@@ -96,7 +97,7 @@ Deno.test("should not decrypt with different private keys or ivs", async () => {
 
   const stringCrypto2 = new SimpleAesCbc(
     PRIVATE_KEY.split("").reverse().join(""),
-    crypto.subtle,
+    crypto.subtle
   );
 
   const data = "hello my friend";
@@ -104,4 +105,16 @@ Deno.test("should not decrypt with different private keys or ivs", async () => {
   const encrypted = await stringCrypto1.encryptString(data);
 
   assertRejects(() => stringCrypto2.decryptString(encrypted));
+});
+
+Deno.test("should throw for invalid key sizes", () => {
+  assertThrows(() => new SimpleAesCbc("a".repeat(13), crypto.subtle));
+  assertThrows(() => new SimpleAesCbc("a".repeat(34), crypto.subtle));
+
+  assertThrows(
+    () => new SimpleAesCbc("a".repeat(16), crypto.subtle, "a".repeat(15))
+  );
+  assertThrows(
+    () => new SimpleAesCbc("a".repeat(16), crypto.subtle, "a".repeat(18))
+  );
 });

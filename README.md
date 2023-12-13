@@ -59,10 +59,10 @@ const stringCrypto = new SimpleAesCbc("1234567890123456", webcrypto.subtle);
 
 This is the constructor of the `SimpleAesCbc` class. It takes three arguments:
 
-- `private_key`, 16 bytes
+- `private_key`, 16, 24 or 32 bytes
 - [`subtle`](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto).
   Which is used to encrypt and decrypt the data
-- optional `iv`, also 16 bytes.
+- optional `iv`, 16 bytes.
 
 #### `encrypt(data: BufferSource): Promise<ArrayBuffer>`
 

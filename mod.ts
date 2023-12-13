@@ -16,6 +16,24 @@ function get_uint8_array(input: Uint8Array | string) {
   }
 }
 
+const VALID_PRIVATE_KEY_SIZES = [
+  16, // 128 bit
+  24, // 192 bit
+  32, // 256 bit
+];
+
+const VALID_IV_SIZES = [
+  16, // 128 bit
+];
+
+function is_valid_size(key: Uint8Array, valid_sizes: number[]) {
+  if (!valid_sizes.includes(key.length)) {
+    throw new Error(
+      `Invalid key size, must be one of: ${valid_sizes.join(", ")}.`
+    );
+  }
+}
+
 /**
  * A simple wrapper for WebCrypto which uses the AES-CBC algorithm.
  * @class SimpleAesCbc
@@ -28,7 +46,7 @@ export class SimpleAesCbc {
 
   /**
    * Creates an instance of SimpleAesCbc.
-   * @param {Uint8Array | string} private_key The private key to use for encryption and decryption.
+   * @param {Uint8Array | string} private_key The private key to use for encryption and decryption (16, 24 or 32 bytes).
    * @param {Subtle} subtle The WebCrypto Subtle object to use for encryption and decryption.
    * @param {Uint8Array | string} [iv] The initialization vector to use for encryption and decryption.
    * If not provided, the private key will be used as the initialization vector.
@@ -43,17 +61,15 @@ export class SimpleAesCbc {
 
     this.private_key = get_uint8_array(private_key);
 
+    is_valid_size(this.private_key, VALID_PRIVATE_KEY_SIZES);
+
     if (iv) {
       this.iv = get_uint8_array(iv);
     } else {
-      this.iv = this.private_key;
+      this.iv = this.private_key.slice(0, 16);
     }
 
-    if (this.iv.length !== 16 || this.private_key.length !== 16) {
-      throw new Error(
-        "Invalid length for either private_key or iv, must be 16 bytes."
-      );
-    }
+    is_valid_size(this.iv, VALID_IV_SIZES);
   }
 
   /**
